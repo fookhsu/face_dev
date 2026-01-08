@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package video;
+
+// 视频上传请求消息
+message UploadRequest {
+  string user_id = 1;
+  string file_name = 2;
+  bytes chunk = 3;
+  int32 chunk_index = 4;
+  int32 total_chunks = 5;
+  string file_type = 6; // image/video
+}
+
+// 视频上传响应消息
+message UploadResponse {
+  string status = 1; // uploading, completed, failed
+  string message = 2;
+  string file_url = 3;
+  int32 uploaded_chunks = 4;
+  int32 total_chunks = 5;
+  float progress = 6;
+}
+
+// 任务创建请求消息
+message CreateTaskRequest {
+  string user_id = 1;
+  string image_url = 2;
+  string video_url = 3;
+}
+
+// 任务响应消息
+message TaskResponse {
+  string task_id = 1;
+  string status = 2; // pending, processing, completed, failed
+  int32 progress = 3;
+  string result_url = 4;
+  string error_message = 5;
+  string created_at = 6;
+  string updated_at = 7;
+}
+
+// 任务状态查询请求
+message TaskStatusRequest {
+  string task_id = 1;
+}
+
+// 获取用户任务列表请求
+message UserTasksRequest {
+  string user_id = 1;
+}
+
+// 用户任务列表响应
+message UserTasksResponse {
+  repeated TaskResponse tasks = 1;
+  int32 total_tasks = 2;
+}
+
+// 视频服务定义
+service VideoService {
+  // 流式上传视频
+  rpc UploadVideo(stream UploadRequest) returns (stream UploadResponse);
+  
+  // 创建换脸任务
+  rpc CreateTask(CreateTaskRequest) returns (TaskResponse);
+  
+  // 获取任务状态
+  rpc GetTaskStatus(TaskStatusRequest) returns (TaskResponse);
+  
+  // 获取用户任务列表
+  rpc GetUserTasks(UserTasksRequest) returns (UserTasksResponse);
+}

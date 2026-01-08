@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+pillow
+opencv-python
+grpcio
+grpcio-tools
+protobuf
+numpy
+pydantic
+python-jose
+passlib
+bcrypt
+python-dotenv
