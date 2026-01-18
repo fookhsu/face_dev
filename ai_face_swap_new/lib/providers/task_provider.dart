@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/grpc_service.dart';
@@ -47,8 +48,12 @@ class TaskProvider with ChangeNotifier {
         _isLoading = false;
         notifyListeners();
       } catch (restError) {
+        // 如果REST API也失败，使用空列表作为默认值
+        _tasks = [];
         _isLoading = false;
-        rethrow;
+        notifyListeners();
+        // 不再抛出错误，避免影响用户体验
+        print('Error loading tasks: $restError');
       }
     }
   }
@@ -95,30 +100,43 @@ class TaskProvider with ChangeNotifier {
       _uploadProgress = 0.0;
       notifyListeners();
       
-      // 使用gRPC上传文件
-      final file = File(filePath);
-      final fileUrl = await _grpcService.uploadFile(
-        file: file,
-        userId: 'user-123',
-        fileType: fileType,
-        onProgress: (progress) {
-          _uploadProgress = progress;
-          notifyListeners();
-        },
-      );
+      // 首先尝试使用REST API上传文件
+      // 这样可以确保在所有平台上都能正常工作
+      final response = await ApiService.uploadFile(filePath, fileType);
       
-      return {
-        'url': fileUrl,
-        'filename': file.path.split('/').last,
-        'size': await file.length(),
-        'type': fileType
-      };
+      // 模拟上传进度
+      for (int i = 0; i <= 100; i += 10) {
+        await Future.delayed(Duration(milliseconds: 100));
+        _uploadProgress = i / 100;
+        notifyListeners();
+      }
+      
+      return response.data;
     } catch (e) {
-      // 失败时回退到REST API
-      try {
-        final response = await ApiService.uploadFile(filePath, fileType);
-        return response.data;
-      } catch (restError) {
+      // 如果REST API失败，尝试使用gRPC上传文件（仅在非Web平台上）
+      if (!kIsWeb) {
+        try {
+          final file = File(filePath);
+          final fileUrl = await _grpcService.uploadFile(
+            file: file,
+            userId: 'user-123',
+            fileType: fileType,
+            onProgress: (progress) {
+              _uploadProgress = progress;
+              notifyListeners();
+            },
+          );
+          
+          return {
+            'url': fileUrl,
+            'filename': file.path.split('/').last,
+            'size': await file.length(),
+            'type': fileType
+          };
+        } catch (grpcError) {
+          rethrow;
+        }
+      } else {
         rethrow;
       }
     }
@@ -158,10 +176,7 @@ class TaskProvider with ChangeNotifier {
     } catch (e) {
       // 失败时回退到REST API
       try {
-        final response = await ApiService.createTask({
-          'imageUrl': imageUrl,
-          'videoUrl': videoUrl,
-        });
+        final response = await ApiService.processVideos(imageUrl, videoUrl);
         
         final task = response.data['task'];
         _tasks.add(task);

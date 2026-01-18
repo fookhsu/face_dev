@@ -118,9 +118,16 @@ async def upload_file(
     file_ext = os.path.splitext(file.filename)[1]
     file_path = UPLOAD_DIR / f"{file_type}-{unique_id}{file_ext}"
     
-    # 保存文件
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    print(f"Upload directory: {UPLOAD_DIR}")
+    print(f"File path: {file_path}")
+
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        print("File saved successfully.")
+    except Exception as e:
+        print(f"Error saving file: {e}")
+        return None
     
     # 返回文件URL
     file_url = f"/uploads/{file_path.name}"
