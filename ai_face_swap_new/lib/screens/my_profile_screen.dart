@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:io' show Platform;
 import '../providers/task_provider.dart';
 import '../styles/app_theme.dart';
 
@@ -44,31 +46,45 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
   Future<void> _pickSourceImage(ImageSource source) async {
     final picker = ImagePicker();
     try {
+      print('DEBUG: _pickSourceImage called with source: $source');
+      print('DEBUG: Current platform: ${Platform.operatingSystem}');
+      
       // 平台特定处理
-      if (false) {
+      if (kIsWeb) {
         // Web平台处理
+        print('DEBUG: Web platform detected, picking source image from gallery');
         final pickedFile = await picker.pickImage(source: ImageSource.gallery);
         if (pickedFile != null) {
+          print('DEBUG: Source image picked on web: ${pickedFile.path}');
           setState(() {
             _sourceImage = File(pickedFile.path);
             _uploadStatus = 'Source image selected: ${pickedFile.path.split('/').last}';
           });
           // 自动上传
+          print('DEBUG: Uploading source image on web');
           await _uploadSourceImage();
+        } else {
+          print('DEBUG: No source image selected on web');
         }
       } else {
         // 移动平台和桌面平台处理
+        print('DEBUG: Non-web platform detected, picking source image from $source');
         final pickedFile = await picker.pickImage(source: source);
         if (pickedFile != null) {
+          print('DEBUG: Source image picked on ${Platform.operatingSystem}: ${pickedFile.path}');
           setState(() {
             _sourceImage = File(pickedFile.path);
             _uploadStatus = 'Source image selected: ${pickedFile.path.split('/').last}';
           });
           // 自动上传
+          print('DEBUG: Uploading source image on ${Platform.operatingSystem}');
           await _uploadSourceImage();
+        } else {
+          print('DEBUG: No source image selected on ${Platform.operatingSystem}');
         }
       }
     } catch (e) {
+      print('DEBUG: Error picking source image: $e');
       setState(() {
         _uploadStatus = 'Error picking image: $e';
       });
@@ -89,6 +105,12 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         _sourceImage!.path,
         'image'
       );
+
+      print('DEBUG: uploadFile result: $result');
+      print('DEBUG: result runtimeType: ${result.runtimeType}');
+      print('DEBUG: result keys: ${result.keys}');
+      print('DEBUG: result[\"url\"]: ${result['url']}');
+      print('DEBUG: result[\"filename\"]: ${result['filename']}');
 
       // 立即添加到creations列表
       setState(() {
@@ -114,7 +136,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         _uploadStatus = 'Upload failed: $e';
         _isUploading = false;
       });
-
+      print('DEBUG: Upload failed: $e');
       // 显示错误消息
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(

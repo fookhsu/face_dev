@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:io' show Platform;
 import '../providers/task_provider.dart';
 import '../styles/app_theme.dart';
 
@@ -29,7 +31,11 @@ class _AIStudioScreenState extends State<AIStudioScreen> {
   Future<void> _pickMedia(ImageSource source) async {
     final picker = ImagePicker();
     try {
+      print('DEBUG: _pickMedia called with source: $source');
+      print('DEBUG: Current platform: ${Platform.operatingSystem}');
+      
       // 显示选择对话框
+      print('DEBUG: Showing media type dialog');
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -41,30 +47,49 @@ class _AIStudioScreenState extends State<AIStudioScreen> {
                 leading: Icon(Icons.image),
                 title: Text('Image'),
                 onTap: () async {
+                  print('DEBUG: Image selected from dialog');
                   Navigator.pop(context);
-                  // 平台特定处理
-                  if (false) {
-                    // Web平台处理
-                    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-                    if (pickedFile != null) {
-                      setState(() {
-                        _targetVideo = File(pickedFile.path);
-                        _uploadStatus = 'Image selected: ${pickedFile.path.split('/').last}';
-                      });
-                      // 自动上传
-                      await _uploadTargetVideo('image');
+                  
+                  try {
+                    // 平台特定处理
+                    if (kIsWeb) {
+                      // Web平台处理
+                      print('DEBUG: Web platform detected, picking image from gallery');
+                      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+                      if (pickedFile != null) {
+                        print('DEBUG: Image picked on web: ${pickedFile.path}');
+                        setState(() {
+                          _targetVideo = File(pickedFile.path);
+                          _uploadStatus = 'Image selected: ${pickedFile.path.split('/').last}';
+                        });
+                        // 自动上传
+                        print('DEBUG: Uploading image on web');
+                        await _uploadTargetVideo('image');
+                      } else {
+                        print('DEBUG: No image selected on web');
+                      }
+                    } else {
+                      // 移动平台和桌面平台处理
+                      print('DEBUG: Non-web platform detected, picking image from $source');
+                      final pickedFile = await picker.pickImage(source: source);
+                      if (pickedFile != null) {
+                        print('DEBUG: Image picked on ${Platform.operatingSystem}: ${pickedFile.path}');
+                        setState(() {
+                          _targetVideo = File(pickedFile.path);
+                          _uploadStatus = 'Image selected: ${pickedFile.path.split('/').last}';
+                        });
+                        // 自动上传
+                        print('DEBUG: Uploading image on ${Platform.operatingSystem}');
+                        await _uploadTargetVideo('image');
+                      } else {
+                        print('DEBUG: No image selected on ${Platform.operatingSystem}');
+                      }
                     }
-                  } else {
-                    // 移动平台和桌面平台处理
-                    final pickedFile = await picker.pickImage(source: source);
-                    if (pickedFile != null) {
-                      setState(() {
-                        _targetVideo = File(pickedFile.path);
-                        _uploadStatus = 'Image selected: ${pickedFile.path.split('/').last}';
-                      });
-                      // 自动上传
-                      await _uploadTargetVideo('image');
-                    }
+                  } catch (e) {
+                    print('DEBUG: Error picking image: $e');
+                    setState(() {
+                      _uploadStatus = 'Error picking image: $e';
+                    });
                   }
                 },
               ),
@@ -72,30 +97,49 @@ class _AIStudioScreenState extends State<AIStudioScreen> {
                 leading: Icon(Icons.video_file),
                 title: Text('Video'),
                 onTap: () async {
+                  print('DEBUG: Video selected from dialog');
                   Navigator.pop(context);
-                  // 平台特定处理
-                  if (false) {
-                    // Web平台处理
-                    final pickedFile = await picker.pickVideo(source: ImageSource.gallery);
-                    if (pickedFile != null) {
-                      setState(() {
-                        _targetVideo = File(pickedFile.path);
-                        _uploadStatus = 'Video selected: ${pickedFile.path.split('/').last}';
-                      });
-                      // 自动上传
-                      await _uploadTargetVideo('video');
+                  
+                  try {
+                    // 平台特定处理
+                    if (kIsWeb) {
+                      // Web平台处理
+                      print('DEBUG: Web platform detected, picking video from gallery');
+                      final pickedFile = await picker.pickVideo(source: ImageSource.gallery);
+                      if (pickedFile != null) {
+                        print('DEBUG: Video picked on web: ${pickedFile.path}');
+                        setState(() {
+                          _targetVideo = File(pickedFile.path);
+                          _uploadStatus = 'Video selected: ${pickedFile.path.split('/').last}';
+                        });
+                        // 自动上传
+                        print('DEBUG: Uploading video on web');
+                        await _uploadTargetVideo('video');
+                      } else {
+                        print('DEBUG: No video selected on web');
+                      }
+                    } else {
+                      // 移动平台和桌面平台处理
+                      print('DEBUG: Non-web platform detected, picking video from $source');
+                      final pickedFile = await picker.pickVideo(source: source);
+                      if (pickedFile != null) {
+                        print('DEBUG: Video picked on ${Platform.operatingSystem}: ${pickedFile.path}');
+                        setState(() {
+                          _targetVideo = File(pickedFile.path);
+                          _uploadStatus = 'Video selected: ${pickedFile.path.split('/').last}';
+                        });
+                        // 自动上传
+                        print('DEBUG: Uploading video on ${Platform.operatingSystem}');
+                        await _uploadTargetVideo('video');
+                      } else {
+                        print('DEBUG: No video selected on ${Platform.operatingSystem}');
+                      }
                     }
-                  } else {
-                    // 移动平台和桌面平台处理
-                    final pickedFile = await picker.pickVideo(source: source);
-                    if (pickedFile != null) {
-                      setState(() {
-                        _targetVideo = File(pickedFile.path);
-                        _uploadStatus = 'Video selected: ${pickedFile.path.split('/').last}';
-                      });
-                      // 自动上传
-                      await _uploadTargetVideo('video');
-                    }
+                  } catch (e) {
+                    print('DEBUG: Error picking video: $e');
+                    setState(() {
+                      _uploadStatus = 'Error picking video: $e';
+                    });
                   }
                 },
               ),
@@ -104,6 +148,7 @@ class _AIStudioScreenState extends State<AIStudioScreen> {
         ),
       );
     } catch (e) {
+      print('DEBUG: Error in _pickMedia: $e');
       setState(() {
         _uploadStatus = 'Error picking media: $e';
       });

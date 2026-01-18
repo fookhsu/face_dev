@@ -40,7 +40,7 @@ class VideoService(video_service_pb2_grpc.VideoServiceServicer):
         self.mock_ai = MockAIModel()
         self.tasks = {}
     
-    async def UploadVideo(self, request_iterator, context):
+    def UploadVideo(self, request_iterator, context):
         """处理流式视频上传"""
         logger.info('开始处理视频上传请求')
         
@@ -56,7 +56,7 @@ class VideoService(video_service_pb2_grpc.VideoServiceServicer):
         
         try:
             # 处理所有上传的分片
-            async for request in request_iterator:
+            for request in request_iterator:
                 # 初始化上传状态
                 if current_upload['user_id'] is None:
                     current_upload['user_id'] = request.user_id
